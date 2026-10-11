@@ -1,0 +1,68 @@
+﻿using Azure.Storage.Blobs;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using SubtitleAI.Application.Auth;
+using SubtitleAI.Application.Jobs;
+using SubtitleAI.Application.Storage;
+using SubtitleAI.Application.Summarization;
+using SubtitleAI.Application.Transcription;
+using SubtitleAI.Infrastructure.Audio;
+using SubtitleAI.Infrastructure.Auth;
+using SubtitleAI.Infrastructure.Jobs;
+using SubtitleAI.Infrastructure.Persistence;
+using SubtitleAI.Infrastructure.Storage;
+using SubtitleAI.Infrastructure.Summarization;
+using SubtitleAI.Infrastructure.Transcription;
+
+namespace SubtitleAI.Infrastructure;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddDbContext<AppDbContext>(o => o.UseNpgsql(config.GetConnectionString("Postgres")));
+
+        services.Configure<JwtOptions>(config.GetSection("Jwt"));
+
+        services.AddIdentityCore<ApplicationUser>(o =>
+        {
+            o.User.RequireUniqueEmail = true;
+            o.Password.RequiredLength = 8;
+            o.Password.RequireNonAlphanumeric = false;
+        }).AddEntityFrameworkStores<AppDbContext>();
+
+        services.AddScoped<IAuthService, AuthService>();
+
+        services.Configure<StorageOptions>(config.GetSection("Storage"));
+        services.AddSingleton(_ => new BlobServiceClient(config["Storage:ConnectionString"]));
+        services.AddScoped<IFileStorage, BlobFileStorage>();
+        services.AddScoped<IJobService, JobService>();
+
+        services.Configure<WhisperSettings>(config.GetSection("Whisper"));
+        services.AddSingleton<IJobQueue, ChannelJobQueue>();
+        services.AddSingleton<IAudioExtractor, FfmpegAudioExtractor>();
+        services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
+
+        // Саммари. Провайдер LLM подключается регистрацией ILlmClient (только если есть ключ).
+        // Нет ILlmClient -> саммари отключено, задачи всё равно завершаются со статусом Done.
+        services.Configure<SummaryOptions>(config.GetSection("Summary"));
+        services.Configure<AzureOpenAiOptions>(config.GetSection("AzureOpenAI"));
+        if (!string.IsNullOrWhiteSpace(config["AzureOpenAI:Endpoint"]) &&
+            !string.IsNullOrWhiteSpace(config["AzureOpenAI:Deployment"]))
+            services.AddSingleton<ILlmClient, AzureOpenAiLlmClient>();
+        services.AddSingleton<ISummaryService>(sp =>
+            sp.GetService<ILlmClient>() is { } llm
+                ? new MapReduceSummaryService(
+                    llm,
+                    sp.GetRequiredService<IOptions<SummaryOptions>>(),
+                    sp.GetRequiredService<ILogger<MapReduceSummaryService>>())
+                : new DisabledSummaryService());
+
+        services.AddHostedService<JobProcessor>();
+
+        return services;
+    }
+}

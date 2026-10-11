@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.git/
+**/*.user
+**/node_modules/
+tests/
+.env
+# dev-настройки (ключи, пути Windows) в образ попадать не должны
+**/appsettings.Development.json
+docker-compose*.yml
+**/Dockerfile*

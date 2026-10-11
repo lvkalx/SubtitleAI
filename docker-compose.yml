@@ -1,0 +1,53 @@
+﻿services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: subtitleai
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задай POSTGRES_PASSWORD в .env}
+    ports: ["127.0.0.1:5434:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d subtitleai"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --location /data --skipApiVersionCheck
+    ports: ["127.0.0.1:10000:10000"]
+    volumes: [azurite:/data]
+
+  # Полный стек: docker compose --profile app up --build
+  # Без профиля поднимаются только postgres и azurite (API запускаешь из VS как раньше).
+  api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: src/SubtitleAI.Api/Dockerfile
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=subtitleai;Username=app;Password=${POSTGRES_PASSWORD}"
+      Jwt__Key: ${JWT_KEY:?Задай JWT_KEY в .env (минимум 32 символа)}
+      Jwt__Issuer: SubtitleAI
+      Jwt__Audience: SubtitleAI.Client
+      Jwt__AccessTokenMinutes: "15"
+      Jwt__RefreshTokenDays: "14"
+      # Ключ Azurite - общеизвестный ключ эмулятора, не секрет. Хост azurite нужен, т.к. 127.0.0.1 внутри контейнера - это он сам
+      Storage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      Storage__Container: media
+      Database__MigrateOnStartup: "true"
+      OpenApi__Enabled: "true"
+      AzureOpenAI__Endpoint: ${AZURE_OPENAI_ENDPOINT:?Задай AZURE_OPENAI_ENDPOINT в .env}
+      AzureOpenAI__Deployment: ${AZURE_OPENAI_DEPLOYMENT:-summary}
+      AzureOpenAI__ApiKey: ${AZURE_OPENAI_API_KEY:?Задай AZURE_OPENAI_API_KEY в .env}
+
+volumes:
+  pgdata:
+  azurite:

@@ -1,0 +1,6 @@
+import { Component, OnInit, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { JobsService } from '../../core/api/jobs.service';
+import { Job } from '../../core/api/models';
+@Component({ selector: 'app-jobs-page', imports: [DatePipe], template: '<main><header><h1>Мои расшифровки</h1><button (click)="load()">Обновить</button></header><label>Загрузить аудио или видео <input type="file" (change)="upload($event)"></label><p>{{ error() }}</p><ul>@for (job of jobs(); track job.id) { <li><strong>{{ job.fileName }}</strong> — {{ job.status }} <small>{{ job.createdAt | date:"short" }}</small></li>} @empty { <li>Задач пока нет.</li> }</ul></main>' })
+export class JobsPageComponent implements OnInit { jobs = signal<Job[]>([]); error = signal(''); constructor(private jobsService: JobsService) {} ngOnInit() { this.load(); } load() { this.jobsService.list().subscribe({ next: x => this.jobs.set(x), error: () => this.error.set('Не удалось загрузить задачи.') }); } upload(event: Event) { const file = (event.target as HTMLInputElement).files?.[0]; if (!file) return; this.jobsService.upload(file).subscribe({ next: () => this.load(), error: () => this.error.set('Не удалось загрузить файл.') }); } }
