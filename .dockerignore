@@ -5,6 +5,7 @@
 **/*.user
 **/node_modules/
 tests/
+frontend/
 .env
 # dev-настройки (ключи, пути Windows) в образ попадать не должны
 **/appsettings.Development.json
