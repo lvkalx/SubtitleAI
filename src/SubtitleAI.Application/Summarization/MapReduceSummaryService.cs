@@ -4,9 +4,8 @@ using Microsoft.Extensions.Options;
 namespace SubtitleAI.Application.Summarization;
 
 /// <summary>
-/// Короткий текст - один запрос к модели. Длинный - режем на куски (map), суммаризуем каждый,
-/// склеиваем частичные саммари и при необходимости повторяем (reduce), пока всё не влезет в один запрос.
-/// От провайдера зависит только ILlmClient.
+/// A short text takes one model request. Long text is chunked, summarized per chunk,
+/// then recursively reduced until it fits in one request. Only ILlmClient depends on a provider.
 /// </summary>
 public sealed class MapReduceSummaryService(
     ILlmClient llm,
@@ -23,7 +22,7 @@ public sealed class MapReduceSummaryService(
         var system = Prompts.System(language);
 
         var chunks = TextChunker.Split(transcript, opt.ChunkSizeChars);
-        var isRaw = true; // true - куски это исходный транскрипт, false - уже частичные саммари
+        var isRaw = true; // True for transcript chunks, false for intermediate summaries.
         var depth = 0;
 
         while (chunks.Count > 1)

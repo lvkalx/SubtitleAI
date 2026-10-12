@@ -5,9 +5,8 @@ namespace SubtitleAI.Application.Summarization;
 public static class TextChunker
 {
     /// <summary>
-    /// Режет текст на куски не длиннее maxChars. Старается резать по границам предложений,
-    /// если предложение слишком длинное (Whisper иногда не ставит пунктуацию) - по пробелам,
-    /// в крайнем случае жёстко по длине.
+    /// Splits text into chunks no longer than maxChars. Prefers sentence boundaries,
+    /// then word boundaries, and falls back to a hard length cut when necessary.
     /// </summary>
     public static IReadOnlyList<string> Split(string text, int maxChars)
     {
@@ -57,7 +56,7 @@ public static class TextChunker
             var cjkEnd = c is '。' or '！' or '？';
             if (!latinEnd && !cjkEnd) continue;
 
-            // "3.14" или "e.g.x" - не конец предложения: после латинского знака нужен пробел или конец текста
+            // "3.14" or "e.g.x" is not a sentence boundary without whitespace or end of text.
             if (latinEnd && i + 1 < text.Length && !char.IsWhiteSpace(text[i + 1])) continue;
 
             var sentence = text[start..(i + 1)].Trim();
@@ -79,7 +78,7 @@ public static class TextChunker
             if (cut <= pos)
             {
                 cut = end;
-                if (char.IsHighSurrogate(s[cut - 1])) cut--; // не рвём суррогатную пару
+                if (char.IsHighSurrogate(s[cut - 1])) cut--; // Do not split a surrogate pair.
             }
 
             var piece = s[pos..cut].Trim();

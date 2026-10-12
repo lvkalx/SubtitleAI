@@ -45,7 +45,7 @@ public class JobProcessor(IServiceScopeFactory scopes, IJobQueue queue, ILogger<
         }
     }
 
-    // После перезапуска: незавершённые задачи возвращаем в очередь
+    // Return unfinished jobs to the queue after a restart.
     private async Task RecoverAsync(CancellationToken ct)
     {
         try
@@ -89,7 +89,7 @@ public class JobProcessor(IServiceScopeFactory scopes, IJobQueue queue, ILogger<
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            throw; // остановка приложения, а не сбой саммари
+            throw; // Application shutdown, not a summarization failure.
         }
         catch (Exception ex)
         {
@@ -143,7 +143,7 @@ public class JobProcessor(IServiceScopeFactory scopes, IJobQueue queue, ILogger<
                 VttContent = SubtitleFormatter.ToVtt(result.Segments)
             });
 
-            // Саммари - необязательный шаг: любая его ошибка не должна ломать субтитры
+            // Summarization is optional: a failure must not prevent subtitle generation.
             var summaryTimeout = TimeSpan.FromSeconds(
                 Math.Max(1, sp.GetRequiredService<IOptions<SummaryOptions>>().Value.TimeoutSeconds));
             var summary = await TrySummarizeAsync(
@@ -164,7 +164,7 @@ public class JobProcessor(IServiceScopeFactory scopes, IJobQueue queue, ILogger<
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            throw; // остановка приложения: задача вернётся в очередь при следующем старте
+            throw; // Application shutdown: the job will be re-queued on the next start.
         }
         catch (Exception ex)
         {
@@ -182,7 +182,7 @@ public class JobProcessor(IServiceScopeFactory scopes, IJobQueue queue, ILogger<
         }
         finally
         {
-            try { Directory.Delete(tmp, recursive: true); } catch { /* временные файлы не критичны */ }
+            try { Directory.Delete(tmp, recursive: true); } catch { /* Temporary files are non-critical. */ }
         }
     }
 }

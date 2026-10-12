@@ -19,34 +19,46 @@
     ports: ["127.0.0.1:10000:10000"]
     volumes: [azurite:/data]
 
-  # Полный стек: docker compose --profile app up --build
-  # Без профиля поднимаются только postgres и azurite (API запускаешь из VS как раньше).
+  # Full stack: docker compose --profile app up --build.
+  # Without the profile, only PostgreSQL and Azurite start for local API development.
   api:
     profiles: ["app"]
     build:
       context: .
       dockerfile: src/SubtitleAI.Api/Dockerfile
-    ports: ["127.0.0.1:8080:8080"]
+    expose: ["8080"]
     depends_on:
       postgres:
         condition: service_healthy
       azurite:
         condition: service_started
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=subtitleai;Username=app;Password=${POSTGRES_PASSWORD}"
       Jwt__Key: ${JWT_KEY:?Задай JWT_KEY в .env (минимум 32 символа)}
       Jwt__Issuer: SubtitleAI
       Jwt__Audience: SubtitleAI.Client
       Jwt__AccessTokenMinutes: "15"
       Jwt__RefreshTokenDays: "14"
-      # Ключ Azurite - общеизвестный ключ эмулятора, не секрет. Хост azurite нужен, т.к. 127.0.0.1 внутри контейнера - это он сам
+      # Azurite's emulator key is public by design. Use the service hostname inside Docker.
       Storage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
       Storage__Container: media
       Database__MigrateOnStartup: "true"
       OpenApi__Enabled: "true"
+      Cors__AllowedOrigins__0: "http://localhost:4200"
       AzureOpenAI__Endpoint: ${AZURE_OPENAI_ENDPOINT:?Задай AZURE_OPENAI_ENDPOINT в .env}
       AzureOpenAI__Deployment: ${AZURE_OPENAI_DEPLOYMENT:-summary}
       AzureOpenAI__ApiKey: ${AZURE_OPENAI_API_KEY:?Задай AZURE_OPENAI_API_KEY в .env}
+
+  frontend:
+    profiles: ["app"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      api:
+        condition: service_started
 
 volumes:
   pgdata:

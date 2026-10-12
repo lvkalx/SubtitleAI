@@ -42,8 +42,13 @@ public class JobsController(IJobService jobs) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List(CancellationToken ct) =>
-        Ok(await jobs.ListAsync(UserId, ct));
+    public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        if (page < 1 || pageSize is < 1 or > 100)
+            return BadRequest(new { errors = new[] { "page must be >= 1 and pageSize must be between 1 and 100." } });
+
+        return Ok(await jobs.ListAsync(UserId, page, pageSize, ct));
+    }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct)
@@ -68,11 +73,11 @@ public class JobsController(IJobService jobs) : ControllerBase
         var job = await jobs.GetAsync(UserId, id, ct);
         if (job is null) return NotFound();
 
-        // Саммари появляется одновременно со статусом Done, поэтому пока задача не завершена - 409
+        // A summary is created with the Done status, so an unfinished job returns 409.
         if (job.Status != nameof(JobStatus.Done))
             return Conflict(new { errors = new[] { $"Job is {job.Status}; summary is not available." } });
 
-        // Задача завершена, но саммари нет (LLM не настроен или вернул ошибку): субтитры при этом готовы
+        // Subtitles are ready, but no summary exists because the LLM is unavailable or failed.
         return NoContent();
     }
 

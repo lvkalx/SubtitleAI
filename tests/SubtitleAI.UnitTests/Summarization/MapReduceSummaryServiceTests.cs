@@ -58,7 +58,7 @@ public class MapReduceSummaryServiceTests
         var text = LongText(30);
         var expectedChunks = TextChunker.Split(text, 100).Count;
         expectedChunks.Should().BeGreaterThan(1);
-        var llm = new FakeLlm { Reply = _ => "x" }; // частичные саммари крошечные, один reduce
+        var llm = new FakeLlm { Reply = _ => "x" }; // Tiny intermediate summaries require one reduce pass.
 
         var result = await Create(llm).SummarizeAsync(text, "en", CancellationToken.None);
 
@@ -72,8 +72,8 @@ public class MapReduceSummaryServiceTests
     public async Task Reduce_is_repeated_while_partial_summaries_do_not_fit()
     {
         var text = LongText(60);
-        // ответ короче куска (15 < 100), но 20 частичных саммари вместе (~340 символов) в один запрос не влезают:
-        // нужен второй проход, после него 4 ответа (~66 символов) уже помещаются в один кусок
+        // Each response is shorter than a source chunk (15 < 100), but 20 intermediate summaries
+        // do not fit in one request. A second pass reduces them to four summaries that do fit.
         var llm = new FakeLlm { Reply = _ => "partial summary" };
 
         var result = await Create(llm, chunkSize: 100, maxDepth: 10).SummarizeAsync(text, "en", CancellationToken.None);

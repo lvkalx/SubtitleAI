@@ -36,13 +36,15 @@ public class JobService(AppDbContext db, IFileStorage storage, IJobQueue queue) 
         return ToDto(job);
     }
 
-    public async Task<IReadOnlyList<JobDto>> ListAsync(string userId, CancellationToken ct)
+    public async Task<PagedResult<JobDto>> ListAsync(string userId, int page, int pageSize, CancellationToken ct)
     {
-        var jobs = await db.MediaJobs.AsNoTracking()
-            .Where(x => x.UserId == userId)
-            .OrderByDescending(x => x.CreatedAt)
+        var query = db.MediaJobs.AsNoTracking().Where(x => x.UserId == userId);
+        var totalCount = await query.CountAsync(ct);
+        var jobs = await query.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(ct);
-        return jobs.Select(ToDto).ToList();
+        return new PagedResult<JobDto>(jobs.Select(ToDto).ToList(), page, pageSize, totalCount);
     }
 
     public async Task<JobDto?> GetAsync(string userId, Guid id, CancellationToken ct)

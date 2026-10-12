@@ -3,20 +3,20 @@
 public record SummaryResult(string Text, string Model);
 
 /// <summary>
-/// Делает саммари транскрипта. Это единственный интерфейс, который знает JobProcessor.
+/// Summarizes a transcript. This is the only summarization interface known to JobProcessor.
 /// </summary>
 public interface ISummaryService
 {
-    /// <summary>false, если LLM-провайдер не настроен (нет ключа): саммари тогда просто пропускается.</summary>
+    /// <summary>False when no LLM provider is configured; the summary step is then skipped.</summary>
     bool IsAvailable { get; }
 
-    /// <returns>null, если саммари недоступно или текст пустой.</returns>
+    /// <returns>Null when a summary is unavailable or the text is empty.</returns>
     Task<SummaryResult?> SummarizeAsync(string transcript, string? language, CancellationToken ct);
 }
 
 /// <summary>
-/// Единственное, что нужно реализовать под конкретного провайдера (Azure OpenAI и т.д.):
-/// отправить два промпта и вернуть текст ответа. Разбиение на куски и map-reduce уже сделаны выше.
+/// The only provider-specific implementation: submit prompts and return the response text.
+/// Chunking and map-reduce orchestration are handled above.
 /// </summary>
 public interface ILlmClient
 {
@@ -26,12 +26,12 @@ public interface ILlmClient
 
 public class SummaryOptions
 {
-    /// <summary>Максимальный размер одного куска в символах (~4 символа на токен, запас под промпт и ответ).</summary>
+    /// <summary>Maximum chunk size in characters (roughly four characters per token).</summary>
     public int ChunkSizeChars { get; set; } = 12000;
 
-    /// <summary>Защита от бесконечного reduce, если модель возвращает саммари не короче исходника.</summary>
+    /// <summary>Prevents infinite reduction when the model does not shorten the text.</summary>
     public int MaxReduceDepth { get; set; } = 5;
 
-    /// <summary>Общий лимит времени на саммари одной задачи.</summary>
+    /// <summary>Total time limit for one job's summary.</summary>
     public int TimeoutSeconds { get; set; } = 300;
 }

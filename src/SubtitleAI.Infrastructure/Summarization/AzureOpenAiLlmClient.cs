@@ -13,10 +13,10 @@ public class AzureOpenAiOptions
     /// <summary>https://&lt;resource&gt;.openai.azure.com/</summary>
     public string Endpoint { get; set; } = "";
 
-    /// <summary>Имя ДЕПЛОЯ в Azure AI Foundry (не имя модели!).</summary>
+    /// <summary>The Azure AI Foundry deployment name, not the model name.</summary>
     public string Deployment { get; set; } = "";
 
-    /// <summary>Пусто -> используется DefaultAzureCredential (az login локально / Managed Identity в Azure).</summary>
+    /// <summary>When empty, uses DefaultAzureCredential: local az login or an Azure managed identity.</summary>
     public string? ApiKey { get; set; }
 
     public float Temperature { get; set; } = 0.2f;
@@ -44,7 +44,7 @@ public sealed class AzureOpenAiLlmClient : ILlmClient
 
     public async Task<string> CompleteAsync(string systemPrompt, string userPrompt, CancellationToken ct)
     {
-        // Если деплой - reasoning-модель (o-серия / gpt-5), Temperature не поддерживается: удали эту строку.
+        // Reasoning deployments (o-series / GPT-5) may not support Temperature.
         var options = new ChatCompletionOptions
         {
             Temperature = _opt.Temperature,
@@ -59,7 +59,7 @@ public sealed class AzureOpenAiLlmClient : ILlmClient
         if (completion.FinishReason == ChatFinishReason.ContentFilter)
             throw new InvalidOperationException("Azure OpenAI content filter blocked the response.");
 
-        // Content бывает пустым (фильтр, отказ) - MapReduceSummaryService бросит понятную ошибку на пустую строку
+        // Content may be empty due to filtering or refusal; the caller handles an empty response.
         return completion.Content.Count > 0 ? completion.Content[0].Text : "";
     }
 }

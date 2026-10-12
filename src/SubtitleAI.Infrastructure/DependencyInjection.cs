@@ -46,8 +46,8 @@ public static class DependencyInjection
         services.AddSingleton<IAudioExtractor, FfmpegAudioExtractor>();
         services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
 
-        // Саммари. Провайдер LLM подключается регистрацией ILlmClient (только если есть ключ).
-        // Нет ILlmClient -> саммари отключено, задачи всё равно завершаются со статусом Done.
+        // Register the LLM provider only when its required configuration is present.
+        // Without an ILlmClient, summarization is disabled but jobs still complete successfully.
         services.Configure<SummaryOptions>(config.GetSection("Summary"));
         services.Configure<AzureOpenAiOptions>(config.GetSection("AzureOpenAI"));
         if (!string.IsNullOrWhiteSpace(config["AzureOpenAI:Endpoint"]) &&

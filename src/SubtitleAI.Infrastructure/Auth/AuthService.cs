@@ -94,7 +94,6 @@ public class AuthService(
         return new AuthResponse
         {
             AccessToken = accessToken,
-            RefreshToken = rawRefresh,
             AccessTokenExpiresAt = expires
         };
     }

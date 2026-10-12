@@ -1,6 +1,6 @@
 ﻿namespace SubtitleAI.Application.Summarization;
 
-/// <summary>Используется, когда LLM-провайдер не настроен.</summary>
+/// <summary>Used when no LLM provider is configured.</summary>
 public sealed class DisabledSummaryService : ISummaryService
 {
     public bool IsAvailable => false;

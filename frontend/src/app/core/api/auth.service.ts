@@ -1,6 +1,71 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
 import { AuthResponse, User } from './models';
+
+const ACCESS_KEY = 'subtitleai.accessToken';
+
 @Injectable({ providedIn: 'root' })
-export class AuthService { private readonly key = 'subtitleai.accessToken'; readonly authenticated = signal(!!localStorage.getItem(this.key)); readonly token = computed(() => localStorage.getItem(this.key)); constructor(private http: HttpClient) {} login(email: string, password: string) { return this.http.post<AuthResponse>('/api/auth/login', { email, password }).pipe(tap(x => this.save(x))); } register(email: string, password: string) { return this.http.post<AuthResponse>('/api/auth/register', { email, password }).pipe(tap(x => this.save(x))); } me() { return this.http.get<User>('/api/auth/me'); } logout() { localStorage.removeItem(this.key); localStorage.removeItem('subtitleai.refreshToken'); this.authenticated.set(false); } private save(x: AuthResponse) { localStorage.setItem(this.key, x.accessToken); localStorage.setItem('subtitleai.refreshToken', x.refreshToken); this.authenticated.set(true); } }
+export class AuthService {
+  private readonly http = inject(HttpClient);
+  private refreshing$: Observable<AuthResponse> | null = null;
+
+  // The refresh token is an HttpOnly cookie and is never readable by JavaScript.
+  readonly authenticated = signal(!!sessionStorage.getItem(ACCESS_KEY));
+
+  get accessToken(): string | null {
+    return sessionStorage.getItem(ACCESS_KEY);
+  }
+
+  login(email: string, password: string) {
+    return this.http
+      .post<AuthResponse>('/api/auth/login', { email, password }, { withCredentials: true })
+      .pipe(tap(x => this.save(x)));
+  }
+
+  register(email: string, password: string) {
+    return this.http
+      .post<AuthResponse>('/api/auth/register', { email, password }, { withCredentials: true })
+      .pipe(tap(x => this.save(x)));
+  }
+
+  me() {
+    return this.http.get<User>('/api/auth/me');
+  }
+
+  restoreSession(): Observable<boolean> {
+    if (this.accessToken) return of(true);
+    return this.refresh().pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
+  }
+
+  // Concurrent 401 responses share one refresh request.
+  refresh(): Observable<AuthResponse> {
+    this.refreshing$ ??= this.http
+      .post<AuthResponse>('/api/auth/refresh', {}, { withCredentials: true })
+      .pipe(
+        tap(x => this.save(x)),
+        finalize(() => (this.refreshing$ = null)),
+        shareReplay(1)
+      );
+    return this.refreshing$;
+  }
+
+  logout() {
+    this.clear();
+    // The local session is already cleared if this request fails.
+    this.http.post('/api/auth/logout', {}, { withCredentials: true }).subscribe({ error: () => {} });
+  }
+
+  clear() {
+    sessionStorage.removeItem(ACCESS_KEY);
+    this.authenticated.set(false);
+  }
+
+  private save(x: AuthResponse) {
+    sessionStorage.setItem(ACCESS_KEY, x.accessToken);
+    this.authenticated.set(true);
+  }
+}

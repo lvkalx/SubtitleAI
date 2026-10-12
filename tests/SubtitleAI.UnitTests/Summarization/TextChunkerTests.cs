@@ -39,12 +39,12 @@ public class TextChunkerTests
     [Fact]
     public void Text_without_punctuation_is_split_on_spaces()
     {
-        var text = string.Join(' ', Enumerable.Repeat("word", 100)); // 499 символов, ни одной точки
+        var text = string.Join(' ', Enumerable.Repeat("word", 100)); // 499 characters and no punctuation.
 
         var chunks = TextChunker.Split(text, 50);
 
         chunks.Should().OnlyContain(c => c.Length <= 50);
-        chunks.Should().OnlyContain(c => c.Split(new[] { ' ' }).All(w => w == "word")); // слова не разрезаны
+        chunks.Should().OnlyContain(c => c.Split(new[] { ' ' }).All(w => w == "word")); // Words are not split.
         Normalize(string.Join(' ', chunks)).Should().Be(text);
     }
 

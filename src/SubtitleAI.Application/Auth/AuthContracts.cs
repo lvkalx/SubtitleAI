@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+using System.Text.Json.Serialization;
+
 namespace SubtitleAI.Application.Auth;
 
 public class RegisterRequest
@@ -22,7 +24,7 @@ public class RefreshRequest
 public class AuthResponse
 {
     public string AccessToken { get; set; } = default!;
-    public string RefreshToken { get; set; } = default!;
+    [JsonIgnore] public string RefreshToken { get; set; } = default!;
     public DateTime AccessTokenExpiresAt { get; set; }
 }
 
