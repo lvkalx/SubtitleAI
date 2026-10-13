@@ -5,6 +5,8 @@
 
 # dotenv files
 .env
+frontend/.angular/
+frontend/dist/
 
 # User-specific files
 *.rsuser
