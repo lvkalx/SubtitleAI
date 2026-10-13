@@ -19,7 +19,7 @@ const en: Dictionary = {
   queued: 'Queued', processing: 'Processing', done: 'Done', failed: 'Failed', detectingLanguage: 'Detecting language', uploadFailed: 'Could not upload the file. Check its format and size (up to 500 MB).', jobsLoadFailed: 'Could not load your recordings. Please try again.',
   previous: '← Previous', next: 'Next →', historyPages: 'Recording history pages',
   back: '← All recordings', ready: 'Transcript ready', languageNotDetected: 'Language not detected', downloadSrt: '↓ Download .SRT', downloadVtt: '↓ Download .VTT', summary: 'Summary', about: 'What this recording is about',
-  listen: 'Listen', stop: 'Stop', speed: 'Speed', fullText: 'Full text', transcript: 'Transcript', copy: 'Copy', copied: 'Copied', loading: 'Loading…', loadingTranscript: 'Loading transcript…',
+  fullText: 'Full text', transcript: 'Transcript', copy: 'Copy', copied: 'Copied', loading: 'Loading…', loadingTranscript: 'Loading transcript…',
   pending: 'Your file is queued', transcribing: 'Transcribing your recording', processingNote: 'This may take a few minutes. This page will update automatically when the result is ready.', failedProcess: 'Could not process the file.'
 };
 
@@ -39,7 +39,7 @@ const ru: Dictionary = {
   queued: 'В очереди', processing: 'В работе', done: 'Готово', failed: 'Ошибка', detectingLanguage: 'Определяем язык', uploadFailed: 'Не удалось загрузить файл. Проверьте формат и размер (до 500 МБ).', jobsLoadFailed: 'Не удалось загрузить записи. Попробуйте ещё раз.',
   previous: '← Назад', next: 'Вперёд →', historyPages: 'Страницы истории записей',
   back: '← Все записи', ready: 'Расшифровка готова', languageNotDetected: 'Язык не определён', downloadSrt: '↓ Скачать .SRT', downloadVtt: '↓ Скачать .VTT', summary: 'Кратко', about: 'О чём эта запись',
-  listen: 'Слушать', stop: 'Стоп', speed: 'Скорость', fullText: 'Полный текст', transcript: 'Расшифровка', copy: 'Копировать', copied: 'Скопировано', loading: 'Загружаем…', loadingTranscript: 'Загружаем расшифровку…',
+  fullText: 'Полный текст', transcript: 'Расшифровка', copy: 'Копировать', copied: 'Скопировано', loading: 'Загружаем…', loadingTranscript: 'Загружаем расшифровку…',
   pending: 'Файл ждёт обработки', transcribing: 'Расшифровываем запись', processingNote: 'Это может занять несколько минут. Страница обновится автоматически, когда результат будет готов.', failedProcess: 'Не удалось обработать файл.'
 };
 
@@ -67,10 +67,4 @@ export class I18nService {
     return new Intl.DateTimeFormat(this.language() === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
   }
 
-  speechLocale(contentLanguage?: string | null) {
-    if (contentLanguage?.toLowerCase().startsWith('ru')) return 'ru-RU';
-    if (contentLanguage?.toLowerCase().startsWith('uk')) return 'uk-UA';
-    if (contentLanguage?.toLowerCase().startsWith('en')) return 'en-US';
-    return this.language() === 'ru' ? 'ru-RU' : 'en-US';
-  }
 }
