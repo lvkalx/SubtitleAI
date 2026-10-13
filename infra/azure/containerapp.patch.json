@@ -4,7 +4,7 @@
       "containers": [
         {
           "name": "frontend",
-          "image": "subtitleai2285ca.azurecr.io/subtitleai-frontend:bcaecb0",
+          "image": "subtitleai2285ca.azurecr.io/subtitleai-frontend:b74af5e",
           "resources": { "cpu": 0.25, "memory": "0.5Gi" },
           "env": [
             { "name": "API_UPSTREAM", "value": "127.0.0.1:8081" }
@@ -12,7 +12,7 @@
         },
         {
           "name": "api",
-          "image": "subtitleai2285ca.azurecr.io/subtitleai-api:bcaecb0",
+          "image": "subtitleai2285ca.azurecr.io/subtitleai-api:b74af5e",
           "resources": { "cpu": 1.0, "memory": "2.0Gi" },
           "env": [
             { "name": "ASPNETCORE_ENVIRONMENT", "value": "Production" },
