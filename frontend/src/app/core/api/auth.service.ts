@@ -12,6 +12,7 @@ export class AuthService {
 
   // The refresh token is an HttpOnly cookie and is never readable by JavaScript.
   readonly authenticated = signal(!!sessionStorage.getItem(ACCESS_KEY));
+  readonly isAdmin = signal(this.hasAdminRole(sessionStorage.getItem(ACCESS_KEY)));
 
   get accessToken(): string | null {
     return sessionStorage.getItem(ACCESS_KEY);
@@ -74,10 +75,21 @@ export class AuthService {
   clear() {
     sessionStorage.removeItem(ACCESS_KEY);
     this.authenticated.set(false);
+    this.isAdmin.set(false);
   }
 
   private save(x: AuthResponse) {
     sessionStorage.setItem(ACCESS_KEY, x.accessToken);
     this.authenticated.set(true);
+    this.isAdmin.set(this.hasAdminRole(x.accessToken));
+  }
+
+  private hasAdminRole(token: string | null): boolean {
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      const role = payload.role;
+      return role === 'admin' || (Array.isArray(role) && role.includes('admin'));
+    } catch { return false; }
   }
 }

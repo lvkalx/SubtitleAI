@@ -18,6 +18,7 @@ public class AuthService(
     UserManager<ApplicationUser> users,
     AppDbContext db,
     IOptions<JwtOptions> options,
+    AdminOptions adminOptions,
     EmailOptions emailOptions,
     IEmailSender emailSender,
     ILogger<AuthService> logger) : IAuthService
@@ -168,7 +169,8 @@ public class AuthService(
         {
             Subject = new ClaimsIdentity([
                 new Claim("sub", user.Id),
-                new Claim("email", user.Email!)
+                new Claim("email", user.Email!),
+                ..(adminOptions.IsAdmin(user.Email) ? new[] { new Claim("role", "admin") } : [])
             ]),
             Issuer = _jwt.Issuer,
             Audience = _jwt.Audience,

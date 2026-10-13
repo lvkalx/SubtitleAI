@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(o => o.UseNpgsql(config.GetConnectionString("Postgres")));
 
         services.Configure<JwtOptions>(config.GetSection("Jwt"));
+        var adminOptions = config.GetSection("Admin").Get<AdminOptions>() ?? new AdminOptions();
+        services.AddSingleton(adminOptions);
         services.Configure<EmailOptions>(config.GetSection("Email"));
         var emailOptions = config.GetSection("Email").Get<EmailOptions>() ?? new EmailOptions();
         services.AddSingleton(emailOptions);
@@ -45,6 +47,8 @@ public static class DependencyInjection
         services.AddSingleton(_ => new BlobServiceClient(config["Storage:ConnectionString"]));
         services.AddScoped<IFileStorage, BlobFileStorage>();
         services.AddScoped<IJobService, JobService>();
+        services.AddHttpClient<IUrlMediaDownloader, UrlMediaDownloader>(client => client.Timeout = TimeSpan.FromMinutes(10))
+            .ConfigurePrimaryHttpMessageHandler(UrlMediaDownloader.CreateSafeHandler);
 
         services.Configure<WhisperSettings>(config.GetSection("Whisper"));
         services.AddSingleton<IJobQueue, ChannelJobQueue>();
