@@ -1,0 +1,38 @@
+{
+  "properties": {
+    "template": {
+      "containers": [
+        {
+          "name": "frontend",
+          "image": "subtitleai2285ca.azurecr.io/subtitleai-frontend:bcaecb0",
+          "resources": { "cpu": 0.25, "memory": "0.5Gi" },
+          "env": [
+            { "name": "API_UPSTREAM", "value": "127.0.0.1:8081" }
+          ]
+        },
+        {
+          "name": "api",
+          "image": "subtitleai2285ca.azurecr.io/subtitleai-api:bcaecb0",
+          "resources": { "cpu": 1.0, "memory": "2.0Gi" },
+          "env": [
+            { "name": "ASPNETCORE_ENVIRONMENT", "value": "Production" },
+            { "name": "ASPNETCORE_HTTP_PORTS", "value": "8081" },
+            { "name": "ConnectionStrings__Postgres", "secretRef": "postgres-connection" },
+            { "name": "Jwt__Key", "secretRef": "jwt-key" },
+            { "name": "Jwt__Issuer", "value": "SubtitleAI" },
+            { "name": "Jwt__Audience", "value": "SubtitleAI.Client" },
+            { "name": "Jwt__AccessTokenMinutes", "value": "15" },
+            { "name": "Jwt__RefreshTokenDays", "value": "14" },
+            { "name": "Storage__ConnectionString", "secretRef": "storage-connection" },
+            { "name": "Storage__Container", "value": "media" },
+            { "name": "Database__MigrateOnStartup", "value": "true" },
+            { "name": "AzureOpenAI__Endpoint", "value": "https://subtitleai-openai.openai.azure.com/" },
+            { "name": "AzureOpenAI__Deployment", "value": "summary" },
+            { "name": "AZURE_CLIENT_ID", "value": "1b3c4199-dbeb-4e12-b735-1c1e9f0c72d6" }
+          ]
+        }
+      ],
+      "scale": { "minReplicas": 1, "maxReplicas": 1 }
+    }
+  }
+}
