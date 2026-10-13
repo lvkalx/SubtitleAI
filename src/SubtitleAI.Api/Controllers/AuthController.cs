@@ -49,7 +49,7 @@ public class AuthController(IAuthService auth, IWebHostEnvironment environment) 
     public async Task<IActionResult> RequestPasswordReset(RequestPasswordResetRequest request, CancellationToken ct)
     {
         var result = await auth.RequestPasswordResetAsync(request, ct);
-        return CompleteOperation(result, Accepted);
+        return CompleteOperation(result, error => StatusCode(StatusCodes.Status503ServiceUnavailable, error));
     }
 
     [HttpPost("reset-password"), EnableRateLimiting("auth")]
@@ -70,7 +70,7 @@ public class AuthController(IAuthService auth, IWebHostEnvironment environment) 
     public async Task<IActionResult> ResendEmailConfirmation(RequestPasswordResetRequest request, CancellationToken ct)
     {
         var result = await auth.ResendEmailConfirmationAsync(request, ct);
-        return CompleteOperation(result, Accepted);
+        return CompleteOperation(result, error => StatusCode(StatusCodes.Status503ServiceUnavailable, error));
     }
 
     [Authorize]
