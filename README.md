@@ -2,6 +2,8 @@
 
 Small full-stack portfolio project that accepts audio/video, produces subtitles, and optionally creates an Azure OpenAI summary.
 
+**Live site:** [sublyAI](https://subtitleai.blackground-ca27ca13.northeurope.azurecontainerapps.io/)
+
 ## Stack
 
 - Angular 20 client with typed API calls, protected routes, upload UI, and paginated job history.
