@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -15,7 +17,10 @@ namespace SubtitleAI.Infrastructure.Auth;
 public class AuthService(
     UserManager<ApplicationUser> users,
     AppDbContext db,
-    IOptions<JwtOptions> options) : IAuthService
+    IOptions<JwtOptions> options,
+    EmailOptions emailOptions,
+    IEmailSender emailSender,
+    ILogger<AuthService> logger) : IAuthService
 {
     private readonly JwtOptions _jwt = options.Value;
 
@@ -24,7 +29,15 @@ public class AuthService(
         var user = new ApplicationUser { UserName = request.Email, Email = request.Email };
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)
-            return AuthResult.Fail(result.Errors.Select(e => e.Description).ToArray());
+            return AuthResult.Fail(result.Errors.Select(ToAuthError).Distinct().ToArray());
+
+        if (emailOptions.RequireConfirmedEmail)
+        {
+            var confirmation = await ResendEmailConfirmationAsync(new RequestPasswordResetRequest { Email = user.Email! }, ct);
+            return confirmation.Succeeded
+                ? AuthResult.Fail("emailConfirmationRequired")
+                : AuthResult.Fail(confirmation.Errors);
+        }
 
         return AuthResult.Ok(await IssueAsync(user, ct));
     }
@@ -33,7 +46,9 @@ public class AuthService(
     {
         var user = await users.FindByEmailAsync(request.Email);
         if (user is null || !await users.CheckPasswordAsync(user, request.Password))
-            return AuthResult.Fail("Invalid email or password.");
+            return AuthResult.Fail("invalidEmailOrPassword");
+        if (emailOptions.RequireConfirmedEmail && !user.EmailConfirmed)
+            return AuthResult.Fail("emailNotConfirmed");
 
         return AuthResult.Ok(await IssueAsync(user, ct));
     }
@@ -43,11 +58,11 @@ public class AuthService(
         var hash = Hash(refreshToken);
         var stored = await db.RefreshTokens.FirstOrDefaultAsync(x => x.TokenHash == hash, ct);
         if (stored is null || !stored.IsActive)
-            return AuthResult.Fail("Invalid refresh token.");
+            return AuthResult.Fail("sessionExpired");
 
         var user = await users.FindByIdAsync(stored.UserId);
         if (user is null)
-            return AuthResult.Fail("Invalid refresh token.");
+            return AuthResult.Fail("sessionExpired");
 
         stored.RevokedAt = DateTime.UtcNow;
         return AuthResult.Ok(await IssueAsync(user, ct));
@@ -61,6 +76,88 @@ public class AuthService(
         {
             stored.RevokedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
+        }
+    }
+
+    public async Task<AuthOperationResult> RequestPasswordResetAsync(RequestPasswordResetRequest request, CancellationToken ct)
+    {
+        if (!emailSender.IsConfigured) return AuthOperationResult.Fail("emailDeliveryUnavailable");
+
+        var user = await users.FindByEmailAsync(request.Email);
+        if (user is null) return AuthOperationResult.Ok();
+
+        try
+        {
+            var token = await users.GeneratePasswordResetTokenAsync(user);
+            await SendEmailAsync(
+                user.Email!,
+                "Reset your sublyAI password",
+                "Set a new password",
+                "We received a request to reset your password. If this was you, use the secure link below.",
+                "/auth/reset-password",
+                user.Id,
+                token,
+                ct);
+            return AuthOperationResult.Ok();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not send password reset email");
+            return AuthOperationResult.Fail("emailDeliveryUnavailable");
+        }
+    }
+
+    public async Task<AuthOperationResult> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(request.UserId);
+        if (user is null) return AuthOperationResult.Fail("invalidOrExpiredPasswordReset");
+
+        var result = await users.ResetPasswordAsync(user, request.Token, request.Password);
+        if (!result.Succeeded)
+            return AuthOperationResult.Fail(result.Errors.Select(ToPasswordResetError).Distinct().ToArray());
+
+        var activeTokens = await db.RefreshTokens.Where(token => token.UserId == user.Id && token.RevokedAt == null).ToListAsync(ct);
+        foreach (var token in activeTokens) token.RevokedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+        return AuthOperationResult.Ok();
+    }
+
+    public async Task<AuthOperationResult> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(request.UserId);
+        if (user is null) return AuthOperationResult.Fail("invalidOrExpiredEmailConfirmation");
+
+        var result = await users.ConfirmEmailAsync(user, request.Token);
+        return result.Succeeded
+            ? AuthOperationResult.Ok()
+            : AuthOperationResult.Fail("invalidOrExpiredEmailConfirmation");
+    }
+
+    public async Task<AuthOperationResult> ResendEmailConfirmationAsync(RequestPasswordResetRequest request, CancellationToken ct)
+    {
+        if (!emailSender.IsConfigured) return AuthOperationResult.Fail("emailDeliveryUnavailable");
+
+        var user = await users.FindByEmailAsync(request.Email);
+        if (user is null || user.EmailConfirmed) return AuthOperationResult.Ok();
+
+        try
+        {
+            var token = await users.GenerateEmailConfirmationTokenAsync(user);
+            await SendEmailAsync(
+                user.Email!,
+                "Confirm your sublyAI email",
+                "Confirm your email",
+                "Use the secure link below to confirm this email address for your sublyAI account.",
+                "/auth/confirm-email",
+                user.Id,
+                token,
+                ct);
+            return AuthOperationResult.Ok();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not send email confirmation");
+            return AuthOperationResult.Fail("emailDeliveryUnavailable");
         }
     }
 
@@ -101,4 +198,38 @@ public class AuthService(
 
     private static string Hash(string token) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+
+    private static string ToAuthError(IdentityError error) => error.Code switch
+    {
+        "DuplicateEmail" or "DuplicateUserName" => "emailAlreadyRegistered",
+        "InvalidEmail" => "invalidEmail",
+        "PasswordTooShort" => "passwordTooShort",
+        "PasswordRequiresDigit" or "PasswordRequiresLower" or "PasswordRequiresUpper" or
+        "PasswordRequiresNonAlphanumeric" or "PasswordRequiresUniqueChars" => "passwordNotStrongEnough",
+        _ => "registrationCouldNotBeCompleted"
+    };
+
+    private static string ToPasswordResetError(IdentityError error) => error.Code switch
+    {
+        "PasswordTooShort" => "passwordTooShort",
+        "PasswordRequiresDigit" or "PasswordRequiresLower" or "PasswordRequiresUpper" or
+        "PasswordRequiresNonAlphanumeric" or "PasswordRequiresUniqueChars" => "passwordNotStrongEnough",
+        _ => "invalidOrExpiredPasswordReset"
+    };
+
+    private async Task SendEmailAsync(
+        string recipient,
+        string subject,
+        string title,
+        string text,
+        string path,
+        string userId,
+        string token,
+        CancellationToken ct)
+    {
+        var url = $"{emailOptions.PublicBaseUrl.TrimEnd('/')}{path}?userId={Uri.EscapeDataString(userId)}&token={Uri.EscapeDataString(token)}";
+        var encodedUrl = HtmlEncoder.Default.Encode(url);
+        var body = $"<h1>{HtmlEncoder.Default.Encode(title)}</h1><p>{HtmlEncoder.Default.Encode(text)}</p><p><a href=\"{encodedUrl}\">{HtmlEncoder.Default.Encode(title)}</a></p><p>This link expires automatically for your security.</p>";
+        await emailSender.SendAsync(recipient, subject, body, ct);
+    }
 }

@@ -38,6 +38,10 @@ The GitHub Actions workflow restores/builds/tests the API and builds/tests Angul
 - Explicit CORS allow-list, request rate limiting, security response headers, upload size/type limits, and ownership-scoped queries.
 - Use HTTPS and store runtime secrets in Azure Key Vault/App Service configuration when deploying. Rotate any Azure key that was ever placed in a local `.env` or shared in a terminal/screenshot.
 
+## Email recovery and confirmation
+
+Password recovery and email confirmation use ordinary SMTP. A custom domain is not required: a free Gmail account with two-step verification and an app password is sufficient. Configure `EMAIL__HOST`, `EMAIL__PORT`, `EMAIL__USERNAME`, `EMAIL__PASSWORD`, `EMAIL__FROM`, and `EMAIL__PUBLICBASEURL` as runtime secrets/settings. Set `EMAIL__REQUIRECONFIRMEDEMAIL=true` only after delivery has been verified; otherwise existing registration and login continue to work without email confirmation.
+
 ## Azure deployment
 
 This repository intentionally has no deployment credentials or Azure resource identifiers. Configure an HTTPS ingress, Azure Database for PostgreSQL, a Storage Account, and Key Vault/App Service settings, then provide those values as GitHub environment secrets or federated OIDC configuration. The container entrypoint is ready for that flow; do not add cloud keys to the repository.

@@ -29,6 +29,18 @@ export class AuthService {
       .pipe(tap(x => this.save(x)));
   }
 
+  requestPasswordReset(email: string) {
+    return this.http.post('/api/auth/request-password-reset', { email });
+  }
+
+  resetPassword(userId: string, token: string, password: string) {
+    return this.http.post('/api/auth/reset-password', { userId, token, password });
+  }
+
+  confirmEmail(userId: string, token: string) {
+    return this.http.post('/api/auth/confirm-email', { userId, token });
+  }
+
   me() {
     return this.http.get<User>('/api/auth/me');
   }

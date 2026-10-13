@@ -5,7 +5,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 // Public authentication requests must not include a bearer token or trigger a refresh loop.
-const PUBLIC = /^\/api\/auth\/(login|register|refresh|logout)$/;
+const PUBLIC = /^\/api\/auth\/(login|register|refresh|logout|request-password-reset|reset-password|confirm-email|resend-email-confirmation)$/;
 
 const withToken = (req: HttpRequest<unknown>, token: string | null) =>
   token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;

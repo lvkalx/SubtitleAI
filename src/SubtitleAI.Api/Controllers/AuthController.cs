@@ -45,6 +45,34 @@ public class AuthController(IAuthService auth, IWebHostEnvironment environment) 
         return NoContent();
     }
 
+    [HttpPost("request-password-reset"), EnableRateLimiting("auth")]
+    public async Task<IActionResult> RequestPasswordReset(RequestPasswordResetRequest request, CancellationToken ct)
+    {
+        var result = await auth.RequestPasswordResetAsync(request, ct);
+        return CompleteOperation(result, Accepted);
+    }
+
+    [HttpPost("reset-password"), EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken ct)
+    {
+        var result = await auth.ResetPasswordAsync(request, ct);
+        return CompleteOperation(result, BadRequest);
+    }
+
+    [HttpPost("confirm-email"), EnableRateLimiting("auth")]
+    public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest request, CancellationToken ct)
+    {
+        var result = await auth.ConfirmEmailAsync(request, ct);
+        return CompleteOperation(result, BadRequest);
+    }
+
+    [HttpPost("resend-email-confirmation"), EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResendEmailConfirmation(RequestPasswordResetRequest request, CancellationToken ct)
+    {
+        var result = await auth.ResendEmailConfirmationAsync(request, ct);
+        return CompleteOperation(result, Accepted);
+    }
+
     [Authorize]
     [HttpGet("me")]
     public IActionResult Me() => Ok(new
@@ -64,6 +92,9 @@ public class AuthController(IAuthService auth, IWebHostEnvironment environment) 
         Response.Cookies.Append(RefreshCookieName, refreshToken, CookieOptions());
         return Ok(result.Response);
     }
+
+    private IActionResult CompleteOperation(AuthOperationResult result, Func<object, IActionResult> error) =>
+        result.Succeeded ? Ok() : error(new { errors = result.Errors });
 
     private CookieOptions CookieOptions() => new()
     {

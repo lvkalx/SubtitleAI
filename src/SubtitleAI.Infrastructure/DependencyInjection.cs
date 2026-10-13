@@ -26,10 +26,15 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(o => o.UseNpgsql(config.GetConnectionString("Postgres")));
 
         services.Configure<JwtOptions>(config.GetSection("Jwt"));
+        services.Configure<EmailOptions>(config.GetSection("Email"));
+        var emailOptions = config.GetSection("Email").Get<EmailOptions>() ?? new EmailOptions();
+        services.AddSingleton(emailOptions);
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
         services.AddIdentityCore<ApplicationUser>(o =>
         {
             o.User.RequireUniqueEmail = true;
+            o.SignIn.RequireConfirmedEmail = emailOptions.RequireConfirmedEmail;
             o.Password.RequiredLength = 8;
             o.Password.RequireNonAlphanumeric = false;
         }).AddEntityFrameworkStores<AppDbContext>();

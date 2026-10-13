@@ -21,6 +21,24 @@ public class RefreshRequest
     [Required] public string RefreshToken { get; set; } = default!;
 }
 
+public class RequestPasswordResetRequest
+{
+    [Required, EmailAddress] public string Email { get; set; } = default!;
+}
+
+public class ResetPasswordRequest
+{
+    [Required] public string UserId { get; set; } = default!;
+    [Required] public string Token { get; set; } = default!;
+    [Required, MinLength(8)] public string Password { get; set; } = default!;
+}
+
+public class ConfirmEmailRequest
+{
+    [Required] public string UserId { get; set; } = default!;
+    [Required] public string Token { get; set; } = default!;
+}
+
 public class AuthResponse
 {
     public string AccessToken { get; set; } = default!;
@@ -38,10 +56,23 @@ public class AuthResult
     public static AuthResult Fail(params string[] errors) => new() { Errors = errors };
 }
 
+public class AuthOperationResult
+{
+    public bool Succeeded { get; init; }
+    public string[] Errors { get; init; } = [];
+
+    public static AuthOperationResult Ok() => new() { Succeeded = true };
+    public static AuthOperationResult Fail(params string[] errors) => new() { Errors = errors };
+}
+
 public interface IAuthService
 {
     Task<AuthResult> RegisterAsync(RegisterRequest request, CancellationToken ct);
     Task<AuthResult> LoginAsync(LoginRequest request, CancellationToken ct);
     Task<AuthResult> RefreshAsync(string refreshToken, CancellationToken ct);
     Task LogoutAsync(string refreshToken, CancellationToken ct);
+    Task<AuthOperationResult> RequestPasswordResetAsync(RequestPasswordResetRequest request, CancellationToken ct);
+    Task<AuthOperationResult> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct);
+    Task<AuthOperationResult> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken ct);
+    Task<AuthOperationResult> ResendEmailConfirmationAsync(RequestPasswordResetRequest request, CancellationToken ct);
 }
