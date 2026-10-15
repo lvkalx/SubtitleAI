@@ -4,7 +4,7 @@
       "containers": [
         {
           "name": "frontend",
-          "image": "subtitleai2285ca.azurecr.io/subtitleai-frontend:8f82ad4",
+          "image": "subtitleai2285ca.azurecr.io/subtitleai-frontend:d0976ac",
           "resources": { "cpu": 0.25, "memory": "0.5Gi" },
           "env": [
             { "name": "API_UPSTREAM", "value": "127.0.0.1:8081" }
