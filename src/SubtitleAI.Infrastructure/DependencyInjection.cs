@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AzureStorage;
+using Microsoft.Azure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,8 +54,11 @@ public static class DependencyInjection
         services.AddSingleton(blobService);
         if (!string.IsNullOrWhiteSpace(storageConnection) && !string.IsNullOrWhiteSpace(storageContainer))
         {
-            services.AddDataProtection().PersistKeysToAzureBlobStorage(
-                blobService.GetBlobContainerClient(storageContainer).GetBlobClient("system/data-protection-keys.xml"));
+            var keysBlob = CloudStorageAccount.Parse(storageConnection)
+                .CreateCloudBlobClient()
+                .GetContainerReference(storageContainer)
+                .GetBlockBlobReference("system/data-protection-keys.xml");
+            services.AddDataProtection().PersistKeysToAzureBlobStorage(keysBlob);
         }
         services.AddScoped<IFileStorage, BlobFileStorage>();
         services.AddScoped<IJobService, JobService>();
