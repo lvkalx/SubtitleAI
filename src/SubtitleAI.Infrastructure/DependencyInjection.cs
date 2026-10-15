@@ -40,7 +40,7 @@ public static class DependencyInjection
             o.Password.RequiredLength = 8;
             o.Password.RequireNonAlphanumeric = false;
         }).AddEntityFrameworkStores<AppDbContext>()
-          .AddTokenProvider<PasswordResetTokenProvider>(TokenOptions.DefaultProvider);
+          .AddTokenProvider<PasswordResetTokenProvider>("Default");
 
         services.AddDataProtection();
 
