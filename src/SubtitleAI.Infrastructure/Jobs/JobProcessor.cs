@@ -113,7 +113,7 @@ public class JobProcessor(
             var summary = await TrySummarizeAsync(sp.GetRequiredService<ISummaryService>(), id, fullText, result.Language, summaryTimeout, ct);
             ct.ThrowIfCancellationRequested();
 
-            db.Transcripts.Add(new Transcript { JobId = id, FullText = fullText, SrtContent = SubtitleFormatter.ToSrt(result.Segments), VttContent = SubtitleFormatter.ToVtt(result.Segments) });
+            db.Transcripts.Add(new Transcript { JobId = id, FullText = fullText });
             if (summary is not null) db.Summaries.Add(new Summary { JobId = id, Text = summary.Text, Model = summary.Model });
             await db.SaveChangesAsync(ct);
             ct.ThrowIfCancellationRequested();

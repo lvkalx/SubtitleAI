@@ -19,7 +19,7 @@ const en: Dictionary = {
   recordings: 'Your recordings', emptyTitle: 'Your recordings will appear here', emptyText: 'Upload your first audio or video — we will handle the rest.',
   queued: 'Queued', processing: 'Processing', done: 'Done', failed: 'Failed', detectingLanguage: 'Detecting language', uploadFailed: 'Could not upload the file. Check its format and size (up to 500 MB).', jobsLoadFailed: 'Could not load your recordings. Please try again.',
   previous: '← Previous', next: 'Next →', historyPages: 'Recording history pages',
-  back: '← All recordings', ready: 'Transcript ready', languageNotDetected: 'Language not detected', downloadSrt: '↓ Download .SRT', downloadVtt: '↓ Download .VTT', summary: 'Summary', about: 'What this recording is about',
+  back: '← All recordings', ready: 'Transcript ready', languageNotDetected: 'Language not detected', summary: 'Summary', about: 'What this recording is about',
   fullText: 'Full text', transcript: 'Transcript', copy: 'Copy', copied: 'Copied', loading: 'Loading…', loadingTranscript: 'Loading transcript…',
   pending: 'Your file is queued', transcribing: 'Transcribing your recording', processingNote: 'This can take a while for long recordings. You can safely leave this page — the file will keep processing and be ready in your library.', failedProcess: 'Could not process the file.'
 };
@@ -40,7 +40,7 @@ const ru: Dictionary = {
   recordings: 'Ваши записи', emptyTitle: 'Здесь появятся ваши записи', emptyText: 'Загрузите первое аудио или видео — мы сделаем остальное.',
   queued: 'В очереди', processing: 'В работе', done: 'Готово', failed: 'Ошибка', detectingLanguage: 'Определяем язык', uploadFailed: 'Не удалось загрузить файл. Проверьте формат и размер (до 500 МБ).', jobsLoadFailed: 'Не удалось загрузить записи. Попробуйте ещё раз.',
   previous: '← Назад', next: 'Вперёд →', historyPages: 'Страницы истории записей',
-  back: '← Все записи', ready: 'Расшифровка готова', languageNotDetected: 'Язык не определён', downloadSrt: '↓ Скачать .SRT', downloadVtt: '↓ Скачать .VTT', summary: 'Кратко', about: 'О чём эта запись',
+  back: '← Все записи', ready: 'Расшифровка готова', languageNotDetected: 'Язык не определён', summary: 'Кратко', about: 'О чём эта запись',
   fullText: 'Полный текст', transcript: 'Расшифровка', copy: 'Копировать', copied: 'Скопировано', loading: 'Загружаем…', loadingTranscript: 'Загружаем расшифровку…',
   pending: 'Файл ждёт обработки', transcribing: 'Расшифровываем запись', processingNote: 'Длинные записи могут обрабатываться заметно дольше. Можете спокойно закрыть эту страницу: обработка продолжится, а готовый результат будет в вашей библиотеке.', failedProcess: 'Не удалось обработать файл.'
 };

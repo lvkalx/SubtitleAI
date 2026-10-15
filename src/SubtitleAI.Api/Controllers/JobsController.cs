@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubtitleAI.Application.Jobs;
@@ -87,21 +86,4 @@ public class JobsController(IJobService jobs) : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("{id:guid}/srt")]
-    public async Task<IActionResult> Srt(Guid id, CancellationToken ct)
-    {
-        var t = await jobs.GetTranscriptAsync(UserId, id, ct);
-        return t is null
-            ? NotFound()
-            : File(Encoding.UTF8.GetBytes(t.SrtContent), "application/x-subrip", $"{id}.srt");
-    }
-
-    [HttpGet("{id:guid}/vtt")]
-    public async Task<IActionResult> Vtt(Guid id, CancellationToken ct)
-    {
-        var t = await jobs.GetTranscriptAsync(UserId, id, ct);
-        return t is null
-            ? NotFound()
-            : File(Encoding.UTF8.GetBytes(t.VttContent), "text/vtt", $"{id}.vtt");
-    }
 }

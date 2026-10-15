@@ -17,7 +17,7 @@ namespace SubtitleAI.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.20")
+                .HasAnnotation("ProductVersion", "9.0.21")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -262,14 +262,6 @@ namespace SubtitleAI.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("FullText")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SrtContent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("VttContent")
                         .IsRequired()
                         .HasColumnType("text");
 
