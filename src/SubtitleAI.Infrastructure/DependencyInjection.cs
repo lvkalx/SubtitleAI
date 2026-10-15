@@ -1,4 +1,6 @@
 ﻿using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AzureStorage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,12 +44,18 @@ public static class DependencyInjection
         }).AddEntityFrameworkStores<AppDbContext>()
           .AddTokenProvider<PasswordResetTokenProvider>("Default");
 
-        services.AddDataProtection();
-
         services.AddScoped<IAuthService, AuthService>();
 
         services.Configure<StorageOptions>(config.GetSection("Storage"));
-        services.AddSingleton(_ => new BlobServiceClient(config["Storage:ConnectionString"]));
+        var storageConnection = config["Storage:ConnectionString"];
+        var storageContainer = config["Storage:Container"];
+        var blobService = new BlobServiceClient(storageConnection);
+        services.AddSingleton(blobService);
+        if (!string.IsNullOrWhiteSpace(storageConnection) && !string.IsNullOrWhiteSpace(storageContainer))
+        {
+            services.AddDataProtection().PersistKeysToAzureBlobStorage(
+                blobService.GetBlobContainerClient(storageContainer).GetBlobClient("system/data-protection-keys.xml"));
+        }
         services.AddScoped<IFileStorage, BlobFileStorage>();
         services.AddScoped<IJobService, JobService>();
         services.Configure<WhisperSettings>(config.GetSection("Whisper"));
