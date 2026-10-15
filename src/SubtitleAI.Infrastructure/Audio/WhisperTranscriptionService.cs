@@ -7,11 +7,13 @@ namespace SubtitleAI.Infrastructure.Transcription;
 public class WhisperSettings
 {
     public string ModelPath { get; set; } = default!;
+    public int Threads { get; set; }
 }
 
 public sealed class WhisperTranscriptionService : ITranscriptionService, IDisposable
 {
     private readonly WhisperFactory _factory;
+    private readonly int _threads;
 
     public WhisperTranscriptionService(IOptions<WhisperSettings> options)
     {
@@ -19,11 +21,15 @@ public sealed class WhisperTranscriptionService : ITranscriptionService, IDispos
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             throw new FileNotFoundException($"Whisper model not found: '{path}'.");
         _factory = WhisperFactory.FromPath(path);
+        _threads = Math.Clamp(options.Value.Threads, 1, Environment.ProcessorCount);
     }
 
     public async Task<TranscriptionResult> TranscribeAsync(string wavPath, CancellationToken ct)
     {
-        await using var processor = _factory.CreateBuilder().WithLanguage("auto").Build();
+        await using var processor = _factory.CreateBuilder()
+            .WithLanguage("auto")
+            .WithThreads(_threads)
+            .Build();
         await using var stream = File.OpenRead(wavPath);
 
         var segments = new List<TranscriptSegment>();

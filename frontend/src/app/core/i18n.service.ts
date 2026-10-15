@@ -21,7 +21,7 @@ const en: Dictionary = {
   previous: '← Previous', next: 'Next →', historyPages: 'Recording history pages',
   back: '← All recordings', ready: 'Transcript ready', languageNotDetected: 'Language not detected', downloadSrt: '↓ Download .SRT', downloadVtt: '↓ Download .VTT', summary: 'Summary', about: 'What this recording is about',
   fullText: 'Full text', transcript: 'Transcript', copy: 'Copy', copied: 'Copied', loading: 'Loading…', loadingTranscript: 'Loading transcript…',
-  pending: 'Your file is queued', transcribing: 'Transcribing your recording', processingNote: 'This may take a few minutes. This page will update automatically when the result is ready.', failedProcess: 'Could not process the file.'
+  pending: 'Your file is queued', transcribing: 'Transcribing your recording', processingNote: 'This can take a while for long recordings. You can safely leave this page — the file will keep processing and be ready in your library.', failedProcess: 'Could not process the file.'
 };
 
 const ru: Dictionary = {
@@ -42,7 +42,7 @@ const ru: Dictionary = {
   previous: '← Назад', next: 'Вперёд →', historyPages: 'Страницы истории записей',
   back: '← Все записи', ready: 'Расшифровка готова', languageNotDetected: 'Язык не определён', downloadSrt: '↓ Скачать .SRT', downloadVtt: '↓ Скачать .VTT', summary: 'Кратко', about: 'О чём эта запись',
   fullText: 'Полный текст', transcript: 'Расшифровка', copy: 'Копировать', copied: 'Скопировано', loading: 'Загружаем…', loadingTranscript: 'Загружаем расшифровку…',
-  pending: 'Файл ждёт обработки', transcribing: 'Расшифровываем запись', processingNote: 'Это может занять несколько минут. Страница обновится автоматически, когда результат будет готов.', failedProcess: 'Не удалось обработать файл.'
+  pending: 'Файл ждёт обработки', transcribing: 'Расшифровываем запись', processingNote: 'Длинные записи могут обрабатываться заметно дольше. Можете спокойно закрыть эту страницу: обработка продолжится, а готовый результат будет в вашей библиотеке.', failedProcess: 'Не удалось обработать файл.'
 };
 
 @Injectable({ providedIn: 'root' })

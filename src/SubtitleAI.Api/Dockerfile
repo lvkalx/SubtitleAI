@@ -43,7 +43,8 @@ COPY --from=model /models /models
 RUN chown -R $APP_UID:$APP_UID /app /models
 
 ENV ASPNETCORE_HTTP_PORTS=8080 \
-    Whisper__ModelPath=/models/ggml-small.bin
+    Whisper__ModelPath=/models/ggml-small.bin \
+    Whisper__Threads=1
 
 EXPOSE 8080
 

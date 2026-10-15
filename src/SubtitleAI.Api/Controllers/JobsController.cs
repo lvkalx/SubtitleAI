@@ -1,11 +1,9 @@
 ﻿using System.Security.Claims;
 using System.Text;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubtitleAI.Application.Jobs;
 using SubtitleAI.Domain;
-using SubtitleAI.Infrastructure.Jobs;
 
 namespace SubtitleAI.Api.Controllers;
 
@@ -41,26 +39,6 @@ public class JobsController(IJobService jobs) : ControllerBase
             UserId, Path.GetFileName(file.FileName), file.ContentType, stream, ct);
 
         return AcceptedAtAction(nameof(Get), new { id = job.Id }, job);
-    }
-
-    [HttpPost("from-url")]
-    public async Task<IActionResult> ImportUrl(ImportUrlRequest request, [FromServices] IUrlMediaDownloader downloader, CancellationToken ct)
-    {
-        try
-        {
-            await using var media = await downloader.DownloadAsync(request.Url, ct);
-            await using var stream = media.OpenRead();
-            var job = await jobs.CreateAsync(UserId, media.FileName, media.ContentType, stream, ct);
-            return AcceptedAtAction(nameof(Get), new { id = job.Id }, job);
-        }
-        catch (RemoteMediaException exception)
-        {
-            return BadRequest(new { errors = new[] { exception.ErrorKey } });
-        }
-        catch (HttpRequestException)
-        {
-            return BadRequest(new { errors = new[] { "mediaUrlUnavailable" } });
-        }
     }
 
     [HttpGet]
@@ -120,9 +98,4 @@ public class JobsController(IJobService jobs) : ControllerBase
             ? NotFound()
             : File(Encoding.UTF8.GetBytes(t.VttContent), "text/vtt", $"{id}.vtt");
     }
-}
-
-public class ImportUrlRequest
-{
-    [Required, Url] public string Url { get; set; } = default!;
 }

@@ -39,7 +39,8 @@ public static class DependencyInjection
             o.SignIn.RequireConfirmedEmail = emailOptions.RequireConfirmedEmail;
             o.Password.RequiredLength = 8;
             o.Password.RequireNonAlphanumeric = false;
-        }).AddEntityFrameworkStores<AppDbContext>();
+        }).AddEntityFrameworkStores<AppDbContext>()
+          .AddDefaultTokenProviders();
 
         services.AddScoped<IAuthService, AuthService>();
 
@@ -47,9 +48,6 @@ public static class DependencyInjection
         services.AddSingleton(_ => new BlobServiceClient(config["Storage:ConnectionString"]));
         services.AddScoped<IFileStorage, BlobFileStorage>();
         services.AddScoped<IJobService, JobService>();
-        services.AddHttpClient<IUrlMediaDownloader, UrlMediaDownloader>(client => client.Timeout = TimeSpan.FromMinutes(10))
-            .ConfigurePrimaryHttpMessageHandler(UrlMediaDownloader.CreateSafeHandler);
-
         services.Configure<WhisperSettings>(config.GetSection("Whisper"));
         services.AddSingleton<IJobQueue, ChannelJobQueue>();
         services.AddSingleton<IAudioExtractor, FfmpegAudioExtractor>();
