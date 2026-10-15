@@ -7,7 +7,7 @@ Small full-stack portfolio project that accepts audio/video, produces subtitles,
 ## Stack
 
 - Angular 20 client with typed API calls, protected routes, upload UI, and paginated job history.
-- ASP.NET Core 9 API, PostgreSQL, Azure Blob Storage/Azurite, Whisper and optional Azure OpenAI.
+- ASP.NET Core 9 API, PostgreSQL, Azure Blob Storage/Azurite, Whisper small and optional Azure OpenAI.
 - Docker Compose: Nginx serves the SPA and reverse-proxies the API; PostgreSQL and Azurite are bound to loopback only.
 
 ## Run locally
@@ -47,3 +47,5 @@ Password recovery and email confirmation use ordinary SMTP. A custom domain is n
 ## Azure deployment
 
 This repository intentionally has no deployment credentials or Azure resource identifiers. Configure an HTTPS ingress, Azure Database for PostgreSQL, a Storage Account, and Key Vault/App Service settings, then provide those values as GitHub environment secrets or federated OIDC configuration. The container entrypoint is ready for that flow; do not add cloud keys to the repository.
+
+The API image uses the local `ggml-small.bin` Whisper model. It is substantially more accurate than `base` while staying within the existing 2 GiB API container allocation. `medium` needs a larger production container and therefore increases hosting cost.
