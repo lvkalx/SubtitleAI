@@ -8,6 +8,7 @@ export class JobsService {
     return this.http.get<PagedResult<Job>>('/api/jobs', { params: { page, pageSize } });
   }
   get(id: string) { return this.http.get<Job>('/api/jobs/' + id); }
+  cancel(id: string) { return this.http.post<void>('/api/jobs/' + id + '/cancel', {}); }
   upload(file: File) { const data = new FormData(); data.append('file', file); return this.http.post<Job>('/api/jobs', data); }
   transcript(id: string) { return this.http.get<{ text: string }>('/api/jobs/' + id + '/transcript'); }
   summary(id: string) { return this.http.get<Summary>('/api/jobs/' + id + '/summary'); }

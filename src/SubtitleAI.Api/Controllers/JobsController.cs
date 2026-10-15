@@ -57,6 +57,12 @@ public class JobsController(IJobService jobs) : ControllerBase
         return job is null ? NotFound() : Ok(job);
     }
 
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<IActionResult> Cancel(Guid id, CancellationToken ct)
+    {
+        return await jobs.CancelAsync(UserId, id, ct) ? NoContent() : NotFound();
+    }
+
     [HttpGet("{id:guid}/transcript")]
     public async Task<IActionResult> GetTranscript(Guid id, CancellationToken ct)
     {

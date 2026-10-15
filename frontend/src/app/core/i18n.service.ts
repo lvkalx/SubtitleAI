@@ -45,6 +45,23 @@ const ru: Dictionary = {
   pending: 'Файл ждёт обработки', transcribing: 'Расшифровываем запись', processingNote: 'Длинные записи могут обрабатываться заметно дольше. Можете спокойно закрыть эту страницу: обработка продолжится, а готовый результат будет в вашей библиотеке.', failedProcess: 'Не удалось обработать файл.'
 };
 
+Object.assign(en, {
+  freeCapacityNote: 'sublyAI is free to use. Capacity is limited, so processing may occasionally wait.',
+  accuracyNote: 'AI transcription can make mistakes. Please review important names, numbers, and details.',
+  cancelTranscription: 'Cancel transcription', cancelling: 'Cancelling…', cancelled: 'Transcription cancelled',
+  cancelledNote: 'This transcription was cancelled. You can upload the file again at any time.',
+  processingNoteAlert: 'You can safely leave this page.',
+  processingNoteTail: ' Your file will keep processing and be ready in your library.'
+});
+Object.assign(ru, {
+  freeCapacityNote: 'sublyAI бесплатный, поэтому мощности ограничены: иногда обработка может немного подождать.',
+  accuracyNote: 'Расшифровка создана ИИ и может содержать ошибки. Проверьте важные имена, числа и детали.',
+  cancelTranscription: 'Остановить расшифровку', cancelling: 'Останавливаем…', cancelled: 'Расшифровка остановлена',
+  cancelledNote: 'Расшифровка остановлена. В любой момент можно загрузить файл заново.',
+  processingNoteAlert: 'Эту страницу можно безопасно закрыть.',
+  processingNoteTail: ' Файл продолжит обрабатываться и появится в библиотеке.'
+});
+
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   readonly language = signal<Language>(typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en');
@@ -54,7 +71,7 @@ export class I18nService {
   }
 
   status(value: string) {
-    return this.t({ Pending: 'queued', Processing: 'processing', Done: 'done', Failed: 'failed' }[value] ?? value);
+    return this.t({ Pending: 'queued', Processing: 'processing', Done: 'done', Failed: 'failed', Cancelled: 'cancelled' }[value] ?? value);
   }
 
   recordingsCount(count: number) {

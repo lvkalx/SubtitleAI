@@ -25,4 +25,8 @@
     <ProjectReference Include="..\..\src\SubtitleAI.Domain\SubtitleAI.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\src\SubtitleAI.Infrastructure\Jobs\ChannelJobQueue.cs" Link="Jobs\ChannelJobQueue.cs" />
+  </ItemGroup>
+
 </Project>

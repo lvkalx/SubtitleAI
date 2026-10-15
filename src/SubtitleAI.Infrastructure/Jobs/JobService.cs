@@ -7,7 +7,11 @@ using SubtitleAI.Infrastructure.Persistence;
 
 namespace SubtitleAI.Infrastructure.Jobs;
 
-public class JobService(AppDbContext db, IFileStorage storage, IJobQueue queue) : IJobService
+public class JobService(
+    AppDbContext db,
+    IFileStorage storage,
+    IJobQueue queue,
+    IJobCancellationRegistry cancellations) : IJobService
 {
     public async Task<JobDto> CreateAsync(
         string userId, string fileName, string contentType, Stream content, CancellationToken ct)
@@ -32,7 +36,7 @@ public class JobService(AppDbContext db, IFileStorage storage, IJobQueue queue) 
             throw;
         }
 
-        queue.Enqueue(job.Id);
+        queue.Enqueue(job.Id, userId);
         return ToDto(job);
     }
 
@@ -52,6 +56,21 @@ public class JobService(AppDbContext db, IFileStorage storage, IJobQueue queue) 
         var job = await db.MediaJobs.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId, ct);
         return job is null ? null : ToDto(job);
+    }
+
+    public async Task<bool> CancelAsync(string userId, Guid id, CancellationToken ct)
+    {
+        var cancelled = await db.MediaJobs
+            .Where(x => x.Id == id && x.UserId == userId &&
+                (x.Status == JobStatus.Pending || x.Status == JobStatus.Processing))
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, JobStatus.Cancelled)
+                .SetProperty(x => x.CompletedAt, DateTime.UtcNow)
+                .SetProperty(x => x.ErrorMessage, (string?)null), ct);
+
+        if (cancelled == 0) return false;
+        cancellations.Cancel(id);
+        return true;
     }
 
     public async Task<Transcript?> GetTranscriptAsync(string userId, Guid id, CancellationToken ct) =>

@@ -22,6 +22,7 @@ public interface IJobService
     Task<JobDto> CreateAsync(string userId, string fileName, string contentType, Stream content, CancellationToken ct);
     Task<PagedResult<JobDto>> ListAsync(string userId, int page, int pageSize, CancellationToken ct);
     Task<JobDto?> GetAsync(string userId, Guid id, CancellationToken ct);
+    Task<bool> CancelAsync(string userId, Guid id, CancellationToken ct);
     Task<Transcript?> GetTranscriptAsync(string userId, Guid id, CancellationToken ct);
     Task<Summary?> GetSummaryAsync(string userId, Guid id, CancellationToken ct);
 }

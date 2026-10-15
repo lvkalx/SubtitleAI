@@ -16,6 +16,15 @@ public interface IAudioExtractor
 
 public interface IJobQueue
 {
-    void Enqueue(Guid jobId);
-    ValueTask<Guid> DequeueAsync(CancellationToken ct);
+    void Enqueue(Guid jobId, string userId);
+    ValueTask<QueuedJob> DequeueAsync(CancellationToken ct);
+    void Complete(string userId);
+}
+
+public record QueuedJob(Guid Id, string UserId);
+
+public interface IJobCancellationRegistry
+{
+    IDisposable Register(Guid jobId, CancellationTokenSource source);
+    bool Cancel(Guid jobId);
 }

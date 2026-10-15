@@ -4,7 +4,7 @@
 
 # ---------- 1. Whisper model (cached independently from source code) ----------
 FROM debian:bookworm-slim AS model
-ARG WHISPER_MODEL=ggml-small.bin
+ARG WHISPER_MODEL=ggml-base.bin
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -43,8 +43,9 @@ COPY --from=model /models /models
 RUN chown -R $APP_UID:$APP_UID /app /models
 
 ENV ASPNETCORE_HTTP_PORTS=8080 \
-    Whisper__ModelPath=/models/ggml-small.bin \
-    Whisper__Threads=1
+    Whisper__ModelPath=/models/ggml-base.bin \
+    Whisper__Threads=1 \
+    Jobs__MaxConcurrentJobs=2
 
 EXPOSE 8080
 

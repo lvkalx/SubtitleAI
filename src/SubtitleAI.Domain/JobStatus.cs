@@ -1,3 +1,3 @@
 ﻿namespace SubtitleAI.Domain;
 
-public enum JobStatus { Pending, Processing, Done, Failed }
+public enum JobStatus { Pending, Processing, Done, Failed, Cancelled }

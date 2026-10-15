@@ -64,9 +64,11 @@ public static class DependencyInjection
         services.AddScoped<IFileStorage, BlobFileStorage>();
         services.AddScoped<IJobService, JobService>();
         services.Configure<WhisperSettings>(config.GetSection("Whisper"));
+        services.Configure<JobProcessingOptions>(config.GetSection("Jobs"));
         services.AddSingleton<IJobQueue, ChannelJobQueue>();
+        services.AddSingleton<IJobCancellationRegistry, JobCancellationRegistry>();
         services.AddSingleton<IAudioExtractor, FfmpegAudioExtractor>();
-        services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
+        services.AddTransient<ITranscriptionService, WhisperTranscriptionService>();
 
         // Register the LLM provider only when its required configuration is present.
         // Without an ILlmClient, summarization is disabled but jobs still complete successfully.
