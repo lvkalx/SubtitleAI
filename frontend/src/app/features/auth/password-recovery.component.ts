@@ -17,7 +17,7 @@ import { I18nService } from '../../core/i18n.service';
       <button class="primary" [disabled]="loading()" type="submit">{{ i18n.t(loading() ? 'sendingEmail' : 'sendResetLink') }}</button></form>
     } @else {
       <p class="eyebrow">{{ i18n.t('passwordRecovery') }}</p><h1>{{ i18n.t('chooseNewPassword') }}</h1><p>{{ i18n.t('newPasswordLead') }}</p>
-      <form (submit)="resetPassword($event)" novalidate><label>{{ i18n.t('password') }}<input [formControl]="password" autocomplete="new-password" type="password" [placeholder]="i18n.t('minPassword')"></label><label>{{ i18n.t('confirmPassword') }}<input [formControl]="confirmPassword" autocomplete="new-password" type="password" [placeholder]="i18n.t('repeatPassword')"></label>
+      <form (submit)="resetPassword($event)" novalidate><label>{{ i18n.t('password') }}<span class="password-field"><input [formControl]="password" autocomplete="new-password" [type]="showPassword() ? 'text' : 'password'" [placeholder]="i18n.t('minPassword')"><button type="button" class="reveal" (click)="togglePassword()" [attr.aria-label]="i18n.t(showPassword() ? 'hide' : 'show')">{{ i18n.t(showPassword() ? 'hide' : 'show') }}</button></span></label><label>{{ i18n.t('confirmPassword') }}<span class="password-field"><input [formControl]="confirmPassword" autocomplete="new-password" [type]="showConfirmPassword() ? 'text' : 'password'" [placeholder]="i18n.t('repeatPassword')"><button type="button" class="reveal" (click)="toggleConfirmPassword()" [attr.aria-label]="i18n.t(showConfirmPassword() ? 'hide' : 'show')">{{ i18n.t(showConfirmPassword() ? 'hide' : 'show') }}</button></span></label>
       @if (message()) { <p class="success" role="status">{{ i18n.t(message()) }}</p> } @if (error()) { <p class="error" role="alert">{{ i18n.t(error()) }}</p> }
       <button class="primary" [disabled]="loading()" type="submit">{{ i18n.t(loading() ? 'savingPassword' : 'saveNewPassword') }}</button></form>
     }
@@ -31,6 +31,8 @@ export class PasswordRecoveryComponent {
   readonly loading = signal(false);
   readonly error = signal('');
   readonly message = signal('');
+  readonly showPassword = signal(false);
+  readonly showConfirmPassword = signal(false);
   readonly isReset = computed(() => this.route.snapshot.data['mode'] === 'reset');
 
   constructor(private auth: AuthService, private route: ActivatedRoute, private router: Router, readonly i18n: I18nService) {}
@@ -63,6 +65,8 @@ export class PasswordRecoveryComponent {
   }
 
   backToLogin() { this.router.navigateByUrl('/auth'); }
+  togglePassword() { this.showPassword.update(value => !value); }
+  toggleConfirmPassword() { this.showConfirmPassword.update(value => !value); }
 
   private errorKey(error: unknown, fallback: string) {
     const response = error as HttpErrorResponse;

@@ -9,7 +9,6 @@ export class JobsService {
   }
   get(id: string) { return this.http.get<Job>('/api/jobs/' + id); }
   upload(file: File) { const data = new FormData(); data.append('file', file); return this.http.post<Job>('/api/jobs', data); }
-  importUrl(url: string) { return this.http.post<Job>('/api/jobs/from-url', { url }); }
   transcript(id: string) { return this.http.get<{ text: string }>('/api/jobs/' + id + '/transcript'); }
   summary(id: string) { return this.http.get<Summary>('/api/jobs/' + id + '/summary'); }
   srtUrl(id: string) { return '/api/jobs/' + id + '/srt'; }
