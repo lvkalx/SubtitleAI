@@ -33,7 +33,6 @@
             { "name": "Email__Password", "secretRef": "smtp-password" },
             { "name": "Email__From", "value": "subly.ai.speechtotext@gmail.com" },
             { "name": "Email__PublicBaseUrl", "value": "https://subtitleai.blackground-ca27ca13.northeurope.azurecontainerapps.io" },
-            { "name": "Email__RequireConfirmedEmail", "value": "false" },
             { "name": "AzureOpenAI__Endpoint", "value": "https://subtitleai-openai.openai.azure.com/" },
             { "name": "AzureOpenAI__Deployment", "value": "summary" },
             { "name": "AZURE_CLIENT_ID", "value": "1b3c4199-dbeb-4e12-b735-1c1e9f0c72d6" }

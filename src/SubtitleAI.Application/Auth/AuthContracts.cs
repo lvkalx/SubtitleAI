@@ -33,12 +33,6 @@ public class ResetPasswordRequest
     [Required, MinLength(8)] public string Password { get; set; } = default!;
 }
 
-public class ConfirmEmailRequest
-{
-    [Required] public string UserId { get; set; } = default!;
-    [Required] public string Token { get; set; } = default!;
-}
-
 public class AuthResponse
 {
     public string AccessToken { get; set; } = default!;
@@ -73,6 +67,4 @@ public interface IAuthService
     Task LogoutAsync(string refreshToken, CancellationToken ct);
     Task<AuthOperationResult> RequestPasswordResetAsync(RequestPasswordResetRequest request, CancellationToken ct);
     Task<AuthOperationResult> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct);
-    Task<AuthOperationResult> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken ct);
-    Task<AuthOperationResult> ResendEmailConfirmationAsync(RequestPasswordResetRequest request, CancellationToken ct);
 }

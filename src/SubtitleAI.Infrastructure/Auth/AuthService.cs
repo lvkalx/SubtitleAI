@@ -32,14 +32,6 @@ public class AuthService(
         if (!result.Succeeded)
             return AuthResult.Fail(result.Errors.Select(ToAuthError).Distinct().ToArray());
 
-        if (emailOptions.RequireConfirmedEmail)
-        {
-            var confirmation = await ResendEmailConfirmationAsync(new RequestPasswordResetRequest { Email = user.Email! }, ct);
-            return confirmation.Succeeded
-                ? AuthResult.Fail("emailConfirmationRequired")
-                : AuthResult.Fail(confirmation.Errors);
-        }
-
         return AuthResult.Ok(await IssueAsync(user, ct));
     }
 
@@ -48,9 +40,6 @@ public class AuthService(
         var user = await users.FindByEmailAsync(request.Email);
         if (user is null || !await users.CheckPasswordAsync(user, request.Password))
             return AuthResult.Fail("invalidEmailOrPassword");
-        if (emailOptions.RequireConfirmedEmail && !user.EmailConfirmed)
-            return AuthResult.Fail("emailNotConfirmed");
-
         return AuthResult.Ok(await IssueAsync(user, ct));
     }
 
@@ -121,45 +110,6 @@ public class AuthService(
         foreach (var token in activeTokens) token.RevokedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
         return AuthOperationResult.Ok();
-    }
-
-    public async Task<AuthOperationResult> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken ct)
-    {
-        var user = await users.FindByIdAsync(request.UserId);
-        if (user is null) return AuthOperationResult.Fail("invalidOrExpiredEmailConfirmation");
-
-        var result = await users.ConfirmEmailAsync(user, request.Token);
-        return result.Succeeded
-            ? AuthOperationResult.Ok()
-            : AuthOperationResult.Fail("invalidOrExpiredEmailConfirmation");
-    }
-
-    public async Task<AuthOperationResult> ResendEmailConfirmationAsync(RequestPasswordResetRequest request, CancellationToken ct)
-    {
-        if (!emailSender.IsConfigured) return AuthOperationResult.Fail("emailDeliveryUnavailable");
-
-        var user = await users.FindByEmailAsync(request.Email);
-        if (user is null || user.EmailConfirmed) return AuthOperationResult.Ok();
-
-        try
-        {
-            var token = await users.GenerateEmailConfirmationTokenAsync(user);
-            await SendEmailAsync(
-                user.Email!,
-                "Confirm your sublyAI email",
-                "Confirm your email",
-                "Use the secure link below to confirm this email address for your sublyAI account.",
-                "/auth/confirm-email",
-                user.Id,
-                token,
-                ct);
-            return AuthOperationResult.Ok();
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "Could not send email confirmation");
-            return AuthOperationResult.Fail("emailDeliveryUnavailable");
-        }
     }
 
     private async Task<AuthResponse> IssueAsync(ApplicationUser user, CancellationToken ct)

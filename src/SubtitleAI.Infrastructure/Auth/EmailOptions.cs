@@ -9,7 +9,6 @@ public sealed class EmailOptions
     public string Password { get; init; } = string.Empty;
     public string From { get; init; } = string.Empty;
     public string PublicBaseUrl { get; init; } = string.Empty;
-    public bool RequireConfirmedEmail { get; init; }
 
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(Host) &&

@@ -59,20 +59,6 @@ public class AuthController(IAuthService auth, IWebHostEnvironment environment) 
         return CompleteOperation(result, BadRequest);
     }
 
-    [HttpPost("confirm-email"), EnableRateLimiting("auth")]
-    public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest request, CancellationToken ct)
-    {
-        var result = await auth.ConfirmEmailAsync(request, ct);
-        return CompleteOperation(result, BadRequest);
-    }
-
-    [HttpPost("resend-email-confirmation"), EnableRateLimiting("auth")]
-    public async Task<IActionResult> ResendEmailConfirmation(RequestPasswordResetRequest request, CancellationToken ct)
-    {
-        var result = await auth.ResendEmailConfirmationAsync(request, ct);
-        return CompleteOperation(result, error => StatusCode(StatusCodes.Status503ServiceUnavailable, error));
-    }
-
     [Authorize]
     [HttpGet("me")]
     public IActionResult Me() => Ok(new

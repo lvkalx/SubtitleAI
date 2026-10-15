@@ -38,10 +38,6 @@ export class AuthService {
     return this.http.post('/api/auth/reset-password', { userId, token, password });
   }
 
-  confirmEmail(userId: string, token: string) {
-    return this.http.post('/api/auth/confirm-email', { userId, token });
-  }
-
   me() {
     return this.http.get<User>('/api/auth/me');
   }

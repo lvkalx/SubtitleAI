@@ -40,7 +40,6 @@ public static class DependencyInjection
         services.AddIdentityCore<ApplicationUser>(o =>
         {
             o.User.RequireUniqueEmail = true;
-            o.SignIn.RequireConfirmedEmail = emailOptions.RequireConfirmedEmail;
             o.Password.RequiredLength = 8;
             o.Password.RequireNonAlphanumeric = false;
         }).AddEntityFrameworkStores<AppDbContext>()
