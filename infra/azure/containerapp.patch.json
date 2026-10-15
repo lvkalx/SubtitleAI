@@ -12,7 +12,7 @@
         },
         {
           "name": "api",
-          "image": "subtitleai2285ca.azurecr.io/subtitleai-api:4b4278e",
+          "image": "subtitleai2285ca.azurecr.io/subtitleai-api:a97b4e4",
           "resources": { "cpu": 1.0, "memory": "2.0Gi" },
           "env": [
             { "name": "ASPNETCORE_ENVIRONMENT", "value": "Production" },
